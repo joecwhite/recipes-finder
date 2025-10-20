@@ -1,8 +1,9 @@
 import dotenv from 'dotenv';
+import path from 'path';
 import type { AppConfig } from '../../../shared/types';
 
-// Load environment variables
-dotenv.config();
+// Load environment variables from project root
+dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
 /**
  * Load and validate environment configuration
