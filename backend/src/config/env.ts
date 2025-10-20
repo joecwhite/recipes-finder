@@ -1,9 +1,28 @@
 import dotenv from 'dotenv';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import type { AppConfig } from '../../../shared/types';
 
 // Load environment variables from project root
-dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
+// Try multiple paths to find .env file
+const possiblePaths = [
+  path.resolve(process.cwd(), '.env'),
+  path.resolve(process.cwd(), '../.env'),
+  path.resolve(process.cwd(), '../../.env'),
+];
+
+let envLoaded = false;
+for (const envPath of possiblePaths) {
+  const result = dotenv.config({ path: envPath });
+  if (!result.error) {
+    envLoaded = true;
+    break;
+  }
+}
+
+if (!envLoaded) {
+  dotenv.config(); // Fallback to default behavior
+}
 
 /**
  * Load and validate environment configuration
