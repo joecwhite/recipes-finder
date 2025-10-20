@@ -82,10 +82,23 @@ Generate search strategy as JSON. Focus on finding recipes that match the nutrit
       outputTokens: response.usage.output_tokens,
     });
 
-    return JSON.parse(content.text);
-  } catch (error) {
-    logger.error('Failed to generate search strategy', { error, query });
-    throw new ClaudeAPIError('search_strategy_failed', 'Failed to generate search strategy');
+    try {
+      const strategy = JSON.parse(content.text);
+      return strategy;
+    } catch (parseError: any) {
+      logger.error('Failed to parse search strategy JSON', {
+        error: parseError.message,
+        responseText: content.text.slice(0, 500)
+      });
+      throw new Error(`Invalid JSON in search strategy: ${parseError.message}`);
+    }
+  } catch (error: any) {
+    logger.error('Failed to generate search strategy', {
+      error: error.message,
+      query,
+      stack: error.stack
+    });
+    throw new ClaudeAPIError('search_strategy_failed', error.message || 'Failed to generate search strategy');
   }
 }
 
@@ -199,18 +212,34 @@ Return ONLY the JSON object, no additional text.`;
 
     // Parse the JSON response
     const cleanedText = content.text.trim();
+    logger.debug('Claude response text', { text: cleanedText.slice(0, 500) });
+
     const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
 
     if (!jsonMatch) {
+      logger.error('No valid JSON found in Claude response', { responseText: cleanedText });
       throw new Error('No valid JSON found in Claude response');
     }
 
-    const recipe: Recipe = JSON.parse(jsonMatch[0]);
+    let recipe: Recipe;
+    try {
+      recipe = JSON.parse(jsonMatch[0]);
+    } catch (parseError: any) {
+      logger.error('Failed to parse Claude JSON response', {
+        error: parseError.message,
+        jsonText: jsonMatch[0].slice(0, 500)
+      });
+      throw new Error(`Invalid JSON from Claude: ${parseError.message}`);
+    }
 
     return recipe;
-  } catch (error) {
-    logger.error('Failed to analyze recipes', { error, candidatesCount: candidates.length });
-    throw new ClaudeAPIError('recipe_analysis_failed', 'Failed to analyze and select recipe');
+  } catch (error: any) {
+    logger.error('Failed to analyze recipes', {
+      error: error.message,
+      candidatesCount: candidates.length,
+      stack: error.stack
+    });
+    throw new ClaudeAPIError('recipe_analysis_failed', error.message || 'Failed to analyze and select recipe');
   }
 }
 
