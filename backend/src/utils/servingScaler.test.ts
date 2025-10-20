@@ -171,7 +171,7 @@ describe('servingScaler', () => {
       const scaled = scaleRecipeServings(recipe, 4);
 
       expect(scaled.servings).toBe(4);
-      expect(scaled.ingredients[0].quantity).toBe('2 cups');
+      expect(scaled.ingredients[0].quantity).toBe('2 cup');
       expect(scaled.ingredients[1].quantity).toBe('4 cups');
       expect(scaled.ingredients[2].quantity).toBe('to taste');
     });

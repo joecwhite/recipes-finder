@@ -47,9 +47,18 @@ export function toFraction(decimal: number): string {
   const whole = Math.floor(decimal);
   const fraction = decimal - whole;
 
+  // If essentially a whole number, return it
+  if (fraction < 0.05) {
+    return whole.toString();
+  }
+
+  // If very close to next whole number, round up
+  if (fraction > 0.95) {
+    return (whole + 1).toString();
+  }
+
   // Common cooking fractions
   const fractions = [
-    { value: 0, str: '' },
     { value: 0.25, str: '1/4' },
     { value: 0.33, str: '1/3' },
     { value: 0.5, str: '1/2' },
@@ -69,20 +78,9 @@ export function toFraction(decimal: number): string {
     }
   }
 
-  // If very close to a whole number, round it
-  if (minDiff < 0.05) {
-    if (closest.value === 0) {
-      return whole.toString();
-    }
-    return (whole + 1).toString();
-  }
-
   // Build result
   if (whole === 0) {
     return closest.str;
-  }
-  if (closest.str === '') {
-    return whole.toString();
   }
   return `${whole} ${closest.str}`;
 }
@@ -106,9 +104,9 @@ export function scaleIngredient(
   const scaleFactor = toServings / fromServings;
   const scaledQuantity = parsedQuantity * scaleFactor;
 
-  // Extract unit from original quantity
-  const unitMatch = ingredient.quantity.match(/[a-zA-Z]+/);
-  const unit = unitMatch ? unitMatch[0] : '';
+  // Extract unit from original quantity (everything after the number)
+  const unitMatch = ingredient.quantity.match(/[\d/.\s]+(.*)$/);
+  const unit = unitMatch && unitMatch[1] ? unitMatch[1].trim() : '';
 
   // Format scaled quantity
   const quantityStr = toFraction(scaledQuantity);
